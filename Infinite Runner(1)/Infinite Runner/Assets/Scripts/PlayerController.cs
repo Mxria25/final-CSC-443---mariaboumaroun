@@ -15,6 +15,7 @@ public class PlayerController : MonoBehaviour
     private int _laneIndex;
     private float _y;
     private float _yVel;
+    private bool _isOnTrain;
     private Vector2 _prevMove;
 
     void Awake()
@@ -36,8 +37,11 @@ public class PlayerController : MonoBehaviour
         if (v.x > 0.5f && _prevMove.x <= 0.5f) ChangeLane(+1);
         else if (v.x < -0.5f && _prevMove.x >= -0.5f) ChangeLane(-1);
 
-        if (v.y > 0.5f && _prevMove.y <= 0.5f && _y <= 0f)
-            _yVel = jumpVelocity;
+        if (v.y > 0.5f && _prevMove.y <= 0.5f && (_y <= 0f || _isOnTrain))
+{
+    _yVel = jumpVelocity;
+    _isOnTrain = false;
+}
 
         _prevMove = v;
     }
@@ -56,11 +60,17 @@ public class PlayerController : MonoBehaviour
         _yVel += gravity * Time.deltaTime;
         _y += _yVel * Time.deltaTime;
 
-        if (_y < 0f)
-        {
-            _y = 0f;
-            _yVel = 0f;
-        }
+       if (_y < 0f)
+{
+    _y = 0f;
+    _yVel = 0f;
+}
+
+if (_isOnTrain && _y < 2f)
+{
+    _y = 2f;
+    _yVel = 0f;
+}
 
         Vector3 pos = transform.position;
         pos.x = Mathf.MoveTowards(pos.x, _laneIndex * laneOffset, laneSwitchSpeed * Time.deltaTime);
@@ -70,17 +80,31 @@ public class PlayerController : MonoBehaviour
     }
 
     private void OnTriggerEnter(Collider other)
+{
+    if (other.CompareTag("Walkable"))
     {
-        if (other.CompareTag("Obstacle"))
-        {
-            GameManager.Instance.GameOver();
-        }
+        _isOnTrain = true;
+        return;
     }
+
+    if (other.CompareTag("Obstacle"))
+    {
+        GameManager.Instance.GameOver();
+    }
+}
     public void Pause(InputAction.CallbackContext ctx)
 {
     if (ctx.performed)
     {
         GameManager.Instance.TogglePause();
+    }
+}
+
+private void OnTriggerExit(Collider other)
+{
+    if (other.CompareTag("Walkable"))
+    {
+        _isOnTrain = false;
     }
 }
 }
