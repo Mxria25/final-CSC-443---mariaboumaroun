@@ -6,6 +6,7 @@ public class LevelGenerator : MonoBehaviour
     [Header("Chunks")]
     [SerializeField] private GameObject[] chunkPrefabs;
     [SerializeField] private int chunkPoolSize = 3;
+    [SerializeField] private GameObject startingChunkPrefab;
 
     [Header("Streaming")]
     [SerializeField] private float spawnAhead = 80f;
@@ -32,9 +33,12 @@ public class LevelGenerator : MonoBehaviour
     }
 
     void Start()
-    {
-        while (_spawnZ < spawnAhead) SpawnNextChunk();
-    }
+{
+    SpawnStartingChunk();
+
+    while (_spawnZ < spawnAhead)
+        SpawnNextChunk();
+}
 
     void Update()
     {
@@ -98,4 +102,22 @@ public class LevelGenerator : MonoBehaviour
         _instanceToPrefab.Remove(chunk);
         _activeChunks.RemoveAt(index);
     }
+
+    private void SpawnStartingChunk()
+{
+    Chunk prefab = startingChunkPrefab.GetComponent<Chunk>();
+
+    Chunk chunk = Instantiate(prefab, transform);
+
+    chunk.transform.SetPositionAndRotation(
+        new Vector3(0f, 0f, _spawnZ + chunk.Length * 0.5f),
+        Quaternion.identity
+    );
+
+    _activeChunks.Add(chunk);
+    _instanceToPrefab[chunk] = prefab;
+
+    _spawnZ += chunk.Length;
+    _currentExit = chunk.Exit;
+}
 }
