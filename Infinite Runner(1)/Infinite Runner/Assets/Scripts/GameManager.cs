@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
@@ -36,17 +37,21 @@ public void AddCoin()
     }
 
     void Update()
+{
+    if (Keyboard.current.rKey.wasPressedThisFrame)
     {
-        if (IsGameOver || IsPaused) return;
-
-        ScrollSpeed = Mathf.Min(
-            ScrollSpeed + config.speedIncreaseRate * Time.deltaTime,
-            config.maxSpeed
-        );
-
-        Distance += ScrollSpeed * Time.deltaTime;
+        RestartGame();
     }
 
+    if (IsGameOver || IsPaused) return;
+
+    ScrollSpeed = Mathf.Min(
+        ScrollSpeed + config.speedIncreaseRate * Time.deltaTime,
+        config.maxSpeed
+    );
+
+    Distance += ScrollSpeed * Time.deltaTime;
+}
     public void GameOver()
     {
         if (IsGameOver) return;
