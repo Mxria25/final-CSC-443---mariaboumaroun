@@ -14,6 +14,13 @@ public class GameManager : MonoBehaviour
 
     public int HighScore { get; private set; }
 
+    public int Coins { get; private set; }
+
+public void AddCoin()
+{
+    Coins++;
+}
+
     void Awake()
     {
         if (Instance != null && Instance != this) 

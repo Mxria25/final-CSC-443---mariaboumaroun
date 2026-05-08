@@ -14,6 +14,9 @@ public class UIManager : MonoBehaviour
     [Header("Pause")]
     [SerializeField] private GameObject pausePanel;
 
+    [SerializeField] private TMP_Text coinText;
+[SerializeField] private TMP_Text finalCoinText;
+
     void Start()
     {
         gameOverPanel.SetActive(false);
@@ -33,9 +36,11 @@ public class UIManager : MonoBehaviour
         {
             gameOverPanel.SetActive(true);
             finalScoreText.text = "Final Score: " + score;
+            finalCoinText.text = "Coins: " + GameManager.Instance.Coins;
         }
 
         pausePanel.SetActive(GameManager.Instance.IsPaused);
+        coinText.text = "x " + GameManager.Instance.Coins;
     }
 
     public void RestartButton()

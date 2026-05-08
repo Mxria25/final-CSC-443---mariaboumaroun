@@ -9,14 +9,17 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float laneSwitchSpeed = 14f;
 
     [Header("Jump")]
-    [SerializeField] private float jumpVelocity = 8f;
-    [SerializeField] private float gravity = -25f;
+    [SerializeField] private float jumpVelocity = 13f;
+    [SerializeField] private float gravity = -30f;
+    [SerializeField] private float trainRoofHeight = 2f;
 
     private int _laneIndex;
     private float _y;
     private float _yVel;
     private bool _isOnTrain;
+    private int _walkableContacts;
     private Vector2 _prevMove;
+    private AudioSource _audioSource;
 
     void Awake()
     {
@@ -25,6 +28,8 @@ public class PlayerController : MonoBehaviour
             rb.isKinematic = true;
             rb.useGravity = false;
         }
+
+        _audioSource = GetComponent<AudioSource>();
     }
 
     public void Move(InputAction.CallbackContext ctx)
@@ -38,10 +43,14 @@ public class PlayerController : MonoBehaviour
         else if (v.x < -0.5f && _prevMove.x >= -0.5f) ChangeLane(-1);
 
         if (v.y > 0.5f && _prevMove.y <= 0.5f && (_y <= 0f || _isOnTrain))
-{
-    _yVel = jumpVelocity;
-    _isOnTrain = false;
-}
+        {
+            _yVel = jumpVelocity;
+            _isOnTrain = false;
+            _walkableContacts = 0;
+
+            if (_audioSource != null)
+                _audioSource.Play();
+        }
 
         _prevMove = v;
     }
@@ -60,17 +69,17 @@ public class PlayerController : MonoBehaviour
         _yVel += gravity * Time.deltaTime;
         _y += _yVel * Time.deltaTime;
 
-       if (_y < 0f)
-{
-    _y = 0f;
-    _yVel = 0f;
-}
+        if (_y < 0f)
+        {
+            _y = 0f;
+            _yVel = 0f;
+        }
 
-if (_isOnTrain && _y < 2f)
-{
-    _y = 2f;
-    _yVel = 0f;
-}
+        if (_isOnTrain && _y < trainRoofHeight)
+        {
+            _y = trainRoofHeight;
+            _yVel = 0f;
+        }
 
         Vector3 pos = transform.position;
         pos.x = Mathf.MoveTowards(pos.x, _laneIndex * laneOffset, laneSwitchSpeed * Time.deltaTime);
@@ -80,31 +89,39 @@ if (_isOnTrain && _y < 2f)
     }
 
     private void OnTriggerEnter(Collider other)
-{
-    if (other.CompareTag("Walkable"))
     {
-        _isOnTrain = true;
-        return;
+        if (other.CompareTag("Walkable"))
+        {
+            _walkableContacts++;
+            _isOnTrain = true;
+            return;
+        }
+
+        if (other.CompareTag("Obstacle"))
+        {
+            GameManager.Instance.GameOver();
+        }
     }
 
-    if (other.CompareTag("Obstacle"))
+    private void OnTriggerExit(Collider other)
     {
-        GameManager.Instance.GameOver();
+        if (other.CompareTag("Walkable"))
+        {
+            _walkableContacts--;
+
+            if (_walkableContacts <= 0)
+            {
+                _walkableContacts = 0;
+                _isOnTrain = false;
+            }
+        }
     }
-}
+
     public void Pause(InputAction.CallbackContext ctx)
-{
-    if (ctx.performed)
     {
-        GameManager.Instance.TogglePause();
+        if (ctx.performed)
+        {
+            GameManager.Instance.TogglePause();
+        }
     }
-}
-
-private void OnTriggerExit(Collider other)
-{
-    if (other.CompareTag("Walkable"))
-    {
-        _isOnTrain = false;
-    }
-}
 }
